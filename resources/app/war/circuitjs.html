@@ -178,6 +178,108 @@
       });
     }
     </script>
+	  <script>
+  let saveAsListenerAdded = false;  // Track if the event listener was added
+
+  async function getGitHubUsername() {
+    const response = await fetch("https://api.github.com/user", {
+        headers: {
+            "Authorization": `token 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`  // Make sure token is kept safe
+        }
+    });
+    const data = await response.json();
+    return data.login; // This will return the GitHub username
+  }
+  async function saveCircuitToGitHub(username, circuitData) {
+    console.log("Detected GitHub username:", username);
+
+    // GitHub Organization & Token
+    const GITHUB_TOKEN = "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";  // Replace with your GitHub token
+    const GITHUB_REPO = "circuit-simulation-project-kalpana213";  // Use your specific repo name
+
+    // Create a Unique File Name
+    const fileName = `circuits/${username}/circuit-${new Date().toISOString()}.json`;
+    const fileContent = btoa(unescape(encodeURIComponent(circuitData)));  // Convert to Base64
+
+    // GitHub API URL for saving the circuit to the repo
+    const url = `https://api.github.com/repos/creamcollar-Edtech/${GITHUB_REPO}/contents/${fileName}`;
+
+    try {
+        const response = await fetch(url, {
+            method: "PUT",
+            headers: {
+                "Authorization": `token ${GITHUB_TOKEN}`,
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                message: `Added circuit file: ${fileName}`,
+                content: fileContent
+            }),
+        });
+
+        const data = await response.json();
+        if (response.ok) {
+            console.log("✅ Circuit saved to GitHub:", data);
+        } else {
+            console.error("❌ Error saving circuit to GitHub:", data);
+        }
+    } catch (error) {
+        console.error("❌ Error while communicating with GitHub API:", error);
+    }
+}
+
+
+  // Main Logic
+  setTimeout(() => {
+    const fileMenuButton = document.querySelector(".gwt-MenuItem");
+
+    if (fileMenuButton) {
+        console.log("✅ Found File menu button in Falstad");
+
+        fileMenuButton.addEventListener("click", () => {
+            console.log("⚡ File menu opened");
+
+            const saveAsButton = document.querySelector("#gwt-uid-5");
+
+            if (saveAsButton && !saveAsListenerAdded) {
+                console.log("✅ Found Save As button");
+
+                saveAsButton.addEventListener("click", () => {
+                    console.log("⚡ Save As clicked!");
+
+                    const duplicateButton = document.querySelector(".cirjsicon-clone");
+
+                    if (duplicateButton) {
+                        console.log("✅ Found Duplicate button, triggering click...");
+                        duplicateButton.click(); // Save circuit data to localStorage
+
+                        setTimeout(async () => {
+                            let circuitData = localStorage.getItem("circuitRecovery") || "No Data";
+                            console.log("📦 Circuit Data:", circuitData);
+
+                            if (circuitData !== "No Data") {
+                                // Get the GitHub username and pass it to saveCircuitToGitHub
+                                const username = await getGitHubUsername();
+                                saveCircuitToGitHub(username, circuitData);
+                            } else {
+                                console.log("❌ No circuit data found.");
+                            }
+                        }, 1500);
+                    } else {
+                        console.log("❌ Duplicate button not found.");
+                    }
+                });
+
+                saveAsListenerAdded = true; // Prevent multiple listeners
+            } else {
+                console.log("❌ Save As button not found.");
+            }
+        });
+    } else {
+        console.log("❌ File menu button not found.");
+    }
+}, 5000);
+</script>
 
   </body>
  </html>
