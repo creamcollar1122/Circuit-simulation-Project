@@ -1,2 +1,2 @@
-# Circuit-simulation-Project hello test
+# Circuit-simulation-Project
 Falstad simulation
